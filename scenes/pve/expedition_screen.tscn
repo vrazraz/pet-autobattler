@@ -1,0 +1,97 @@
+[gd_scene load_steps=2 format=3 uid="uid://expedition_screen"]
+
+[ext_resource type="Script" path="res://scripts/ui/expedition_screen.gd" id="1_exp"]
+
+[node name="ExpeditionScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_exp")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.08, 0.1, 0.12, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+
+[node name="Header" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="VBoxContainer/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Вылазка"
+
+[node name="RetreatButton" type="Button" parent="VBoxContainer/Header"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+text = "Отступить"
+
+[node name="MapContainer" type="Control" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+
+[node name="MapNodes" type="HBoxContainer" parent="VBoxContainer/MapContainer"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="InfoPanel" type="PanelContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="InfoVBox" type="VBoxContainer" parent="VBoxContainer/InfoPanel"]
+layout_mode = 2
+
+[node name="NodeInfo" type="Label" parent="VBoxContainer/InfoPanel/InfoVBox"]
+layout_mode = 2
+text = "Выберите узел для начала"
+
+[node name="TeamInfo" type="Label" parent="VBoxContainer/InfoPanel/InfoVBox"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TeamPanel" type="PanelContainer" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TeamVBox" type="VBoxContainer" parent="VBoxContainer/HBoxContainer/TeamPanel"]
+layout_mode = 2
+
+[node name="TeamLabel" type="Label" parent="VBoxContainer/HBoxContainer/TeamPanel/TeamVBox"]
+layout_mode = 2
+text = "Выберите команду (до 3 питомцев):"
+
+[node name="PetsList" type="ItemList" parent="VBoxContainer/HBoxContainer/TeamPanel/TeamVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+select_mode = 1
+
+[node name="ActionButton" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+text = "Начать вылазку"
+
+[connection signal="pressed" from="VBoxContainer/Header/RetreatButton" to="." method="_on_retreat_pressed"]
+[connection signal="multi_selected" from="VBoxContainer/HBoxContainer/TeamPanel/TeamVBox/PetsList" to="." method="_on_pet_multi_selected"]
+[connection signal="pressed" from="VBoxContainer/ActionButton" to="." method="_on_action_pressed"]

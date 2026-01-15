@@ -1,0 +1,127 @@
+[gd_scene load_steps=2 format=3 uid="uid://battle_screen"]
+
+[ext_resource type="Script" path="res://scripts/ui/battle_screen.gd" id="1_battle"]
+
+[node name="BattleScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_battle")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.05, 0.08, 0.1, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+
+[node name="Header" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="VBoxContainer/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Бой!"
+
+[node name="TimeLabel" type="Label" parent="VBoxContainer/Header"]
+layout_mode = 2
+text = "0:00"
+
+[node name="BattleArea" type="Control" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 300)
+layout_mode = 2
+
+[node name="Arena" type="ColorRect" parent="VBoxContainer/BattleArea"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.15, 0.18, 0.12, 1)
+
+[node name="PlayerTeam" type="HBoxContainer" parent="VBoxContainer/BattleArea"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 50.0
+offset_top = -50.0
+offset_bottom = 50.0
+
+[node name="EnemyTeam" type="HBoxContainer" parent="VBoxContainer/BattleArea"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -50.0
+offset_right = -50.0
+offset_bottom = 50.0
+
+[node name="TeamsPanel" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PlayerPanel" type="PanelContainer" parent="VBoxContainer/TeamsPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PlayerVBox" type="VBoxContainer" parent="VBoxContainer/TeamsPanel/PlayerPanel"]
+layout_mode = 2
+
+[node name="PlayerLabel" type="Label" parent="VBoxContainer/TeamsPanel/PlayerPanel/PlayerVBox"]
+layout_mode = 2
+text = "Ваша команда"
+horizontal_alignment = 1
+
+[node name="PlayerStats" type="Label" parent="VBoxContainer/TeamsPanel/PlayerPanel/PlayerVBox"]
+layout_mode = 2
+
+[node name="EnemyPanel" type="PanelContainer" parent="VBoxContainer/TeamsPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EnemyVBox" type="VBoxContainer" parent="VBoxContainer/TeamsPanel/EnemyPanel"]
+layout_mode = 2
+
+[node name="EnemyLabel" type="Label" parent="VBoxContainer/TeamsPanel/EnemyPanel/EnemyVBox"]
+layout_mode = 2
+text = "Противник"
+horizontal_alignment = 1
+
+[node name="EnemyStats" type="Label" parent="VBoxContainer/TeamsPanel/EnemyPanel/EnemyVBox"]
+layout_mode = 2
+
+[node name="LogLabel" type="Label" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+text = "Бой начинается..."
+
+[node name="ButtonsHBox" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="SurrenderButton" type="Button" parent="VBoxContainer/ButtonsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Сдаться"
+
+[node name="SpeedButton" type="Button" parent="VBoxContainer/ButtonsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Ускорить x2"
+
+[connection signal="pressed" from="VBoxContainer/ButtonsHBox/SurrenderButton" to="." method="_on_surrender_pressed"]
+[connection signal="pressed" from="VBoxContainer/ButtonsHBox/SpeedButton" to="." method="_on_speed_pressed"]

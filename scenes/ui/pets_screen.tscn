@@ -1,0 +1,72 @@
+[gd_scene load_steps=2 format=3 uid="uid://pets_screen"]
+
+[ext_resource type="Script" path="res://scripts/ui/pets_screen.gd" id="1_pets"]
+
+[node name="PetsScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_pets")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.1, 0.12, 0.15, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+
+[node name="Header" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="VBoxContainer/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Мои питомцы"
+
+[node name="BackButton" type="Button" parent="VBoxContainer/Header"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+text = "Назад"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PetsList" type="VBoxContainer" parent="VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PetDetails" type="PanelContainer" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+
+[node name="DetailsVBox" type="VBoxContainer" parent="VBoxContainer/PetDetails"]
+layout_mode = 2
+
+[node name="PetName" type="Label" parent="VBoxContainer/PetDetails/DetailsVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Выберите питомца"
+
+[node name="PetStats" type="Label" parent="VBoxContainer/PetDetails/DetailsVBox"]
+layout_mode = 2
+
+[node name="PetSkills" type="Label" parent="VBoxContainer/PetDetails/DetailsVBox"]
+layout_mode = 2
+
+[node name="PetParts" type="Label" parent="VBoxContainer/PetDetails/DetailsVBox"]
+layout_mode = 2
+
+[connection signal="pressed" from="VBoxContainer/Header/BackButton" to="." method="_on_back_pressed"]

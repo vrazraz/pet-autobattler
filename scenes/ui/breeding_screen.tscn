@@ -1,0 +1,95 @@
+[gd_scene load_steps=2 format=3 uid="uid://breeding_screen"]
+
+[ext_resource type="Script" path="res://scripts/ui/breeding_screen.gd" id="1_breed"]
+
+[node name="BreedingScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_breed")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.12, 0.1, 0.15, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+
+[node name="Header" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="VBoxContainer/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Разведение"
+
+[node name="BackButton" type="Button" parent="VBoxContainer/Header"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+text = "Назад"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Parent1Panel" type="PanelContainer" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Parent1VBox" type="VBoxContainer" parent="VBoxContainer/HBoxContainer/Parent1Panel"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/HBoxContainer/Parent1Panel/Parent1VBox"]
+layout_mode = 2
+text = "Родитель A"
+horizontal_alignment = 1
+
+[node name="Parent1List" type="ItemList" parent="VBoxContainer/HBoxContainer/Parent1Panel/Parent1VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Spacer" type="Control" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+
+[node name="Parent2Panel" type="PanelContainer" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Parent2VBox" type="VBoxContainer" parent="VBoxContainer/HBoxContainer/Parent2Panel"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/HBoxContainer/Parent2Panel/Parent2VBox"]
+layout_mode = 2
+text = "Родитель B"
+horizontal_alignment = 1
+
+[node name="Parent2List" type="ItemList" parent="VBoxContainer/HBoxContainer/Parent2Panel/Parent2VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="BreedButton" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+text = "Создать яйцо"
+
+[node name="StatusLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[connection signal="pressed" from="VBoxContainer/Header/BackButton" to="." method="_on_back_pressed"]
+[connection signal="item_selected" from="VBoxContainer/HBoxContainer/Parent1Panel/Parent1VBox/Parent1List" to="." method="_on_parent1_selected"]
+[connection signal="item_selected" from="VBoxContainer/HBoxContainer/Parent2Panel/Parent2VBox/Parent2List" to="." method="_on_parent2_selected"]
+[connection signal="pressed" from="VBoxContainer/BreedButton" to="." method="_on_breed_pressed"]

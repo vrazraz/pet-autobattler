@@ -8,6 +8,7 @@ var currency: int = 100
 
 var current_battle: BattleManager = null
 var current_battle_data: Dictionary = {}
+var current_expedition: Expedition = null  # активная вылазка переживает переход на экран боя
 
 signal currency_changed(new_amount: int)
 signal pet_added(pet: Pet)
@@ -60,10 +61,14 @@ func remove_pet(pet: Pet):
 		SaveManager.save_game()
 
 func get_healthy_pets() -> Array[Pet]:
-	return player_pets.filter(func(p): return p.can_fight())
+	var result: Array[Pet] = []
+	result.assign(player_pets.filter(func(p): return p.can_fight()))
+	return result
 
 func get_injured_pets() -> Array[Pet]:
-	return player_pets.filter(func(p): return p.state == Pet.PetState.INJURED)
+	var result: Array[Pet] = []
+	result.assign(player_pets.filter(func(p): return p.state == Pet.PetState.INJURED))
+	return result
 
 func get_pet_by_id(id: String) -> Pet:
 	for pet in player_pets:
@@ -77,6 +82,8 @@ func breed_pets(pet_a: Pet, pet_b: Pet) -> Dictionary:
 		return {}
 
 	var egg = Genetics.create_egg(pet_a, pet_b)
+	# Потомок выводится сразу: яйцо вылупится, даже если родители погибнут
+	egg["offspring"] = SaveManager.serialize_pet(Genetics.breed(pet_a, pet_b))
 	eggs.append(egg)
 	egg_added.emit(egg)
 
@@ -90,15 +97,10 @@ func _check_eggs():
 	for i in range(eggs.size()):
 		var egg = eggs[i]
 		if current_time >= egg["hatch_time"]:
-			var parent_a = get_pet_by_id(egg["parent_a_id"])
-			var parent_b = get_pet_by_id(egg["parent_b_id"])
-
-			if parent_a and parent_b:
-				var offspring = Genetics.hatch_egg(egg, parent_a, parent_b)
-				if offspring:
-					add_pet(offspring)
-					egg_hatched.emit(offspring)
-					hatched.append(i)
+			var offspring = _hatch(egg)
+			add_pet(offspring)
+			egg_hatched.emit(offspring)
+			hatched.append(i)
 
 	# Удаляем вылупившиеся яйца
 	for i in range(hatched.size() - 1, -1, -1):
@@ -106,6 +108,21 @@ func _check_eggs():
 
 	if not hatched.is_empty():
 		SaveManager.save_game()
+
+func _hatch(egg: Dictionary) -> Pet:
+	if egg.has("offspring"):
+		return SaveManager.deserialize_pet(egg["offspring"])
+
+	# Яйца из старых сохранений: разводим по родителям, если они ещё живы
+	var parent_a = get_pet_by_id(egg.get("parent_a_id", ""))
+	var parent_b = get_pet_by_id(egg.get("parent_b_id", ""))
+	if parent_a and parent_b:
+		return Genetics.breed(parent_a, parent_b)
+
+	var orphan = PetDatabase.generate_random_pet(1)
+	orphan.parent_a_id = egg.get("parent_a_id", "")
+	orphan.parent_b_id = egg.get("parent_b_id", "")
+	return orphan
 
 # Валюта
 func add_currency(amount: int):
@@ -121,14 +138,35 @@ func spend_currency(amount: int) -> bool:
 		return true
 	return false
 
+# Итоги боя: HP, ранения/смерть (один бросок на питомца), награды, ход вылазки
+func finish_battle(battle: BattleManager, battle_data: Dictionary):
+	var won = battle.result == BattleManager.BattleResult.PLAYER_WIN
+	battle.write_back_hp()
+
+	var defeated_player_pets = battle.get_defeated_pets(0)
+	var expedition: Expedition = battle_data.get("expedition")
+
+	if expedition:
+		# Награды и захват в вылазке выдаёт сама вылазка
+		process_battle_result(battle.result, defeated_player_pets, null, false)
+		expedition.on_battle_complete(won, battle.get_defeated_pets(1))
+	else:
+		var captured: Pet = null
+		var defeated_enemies = battle.get_defeated_pets(1)
+		if won and not defeated_enemies.is_empty() and randf() < 0.3:
+			captured = defeated_enemies[0]
+			captured.set_injured(randf_range(180, 360))
+		process_battle_result(battle.result, defeated_player_pets, captured)
+
 # После боя
-func process_battle_result(result: BattleManager.BattleResult, defeated_pets: Array[Pet], captured_pet: Pet = null):
-	# Обрабатываем поражённых питомцев игрока
+func process_battle_result(result: BattleManager.BattleResult, defeated_pets: Array[Pet], captured_pet: Pet = null, give_rewards: bool = true):
+	# Обрабатываем поражённых питомцев игрока: смертью грозит только проигранный бой
+	var can_die = result != BattleManager.BattleResult.PLAYER_WIN
 	for pet in defeated_pets:
-		pet._on_defeated()
+		pet._on_defeated(can_die)
 
 	# Награда за победу
-	if result == BattleManager.BattleResult.PLAYER_WIN:
+	if give_rewards and result == BattleManager.BattleResult.PLAYER_WIN:
 		add_currency(randi_range(10, 30))
 
 		# Захват вражеского питомца (если есть)

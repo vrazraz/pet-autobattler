@@ -30,30 +30,30 @@ func _init_heads():
 	wolf_head.attack_range = 1.0
 	wolf_head.size = 1.0
 	wolf_head.color = Color(0.5, 0.5, 0.5)
-	wolf_head.skill_tags = ["fierce", "pack"]
+	wolf_head.skill_tags.assign(["fierce", "pack"])
 	heads.append(wolf_head)
 
 	var lizard_head = BodyPart.new()
 	lizard_head.id = "head_lizard"
 	lizard_head.part_type = BodyPart.PartType.HEAD
 	lizard_head.display_name = "Голова ящера"
-	lizard_head.hp = 12
-	lizard_head.atk = 6
+	lizard_head.hp = 14
+	lizard_head.atk = 7
 	lizard_head.def = 5
 	lizard_head.speed = 4
 	lizard_head.crit = 0.05
 	lizard_head.attack_range = 1.0
 	lizard_head.size = 0.9
 	lizard_head.color = Color(0.2, 0.6, 0.2)
-	lizard_head.skill_tags = ["scaled", "regenerate"]
+	lizard_head.skill_tags.assign(["scaled", "regenerate"])
 	heads.append(lizard_head)
 
 	var bird_head = BodyPart.new()
 	bird_head.id = "head_bird"
 	bird_head.part_type = BodyPart.PartType.HEAD
 	bird_head.display_name = "Птичья голова"
-	bird_head.hp = 8
-	bird_head.atk = 5
+	bird_head.hp = 10
+	bird_head.atk = 6
 	bird_head.def = 2
 	bird_head.speed = 10
 	bird_head.crit = 0.15
@@ -61,15 +61,15 @@ func _init_heads():
 	bird_head.attack_range = 2.0
 	bird_head.size = 0.7
 	bird_head.color = Color(0.8, 0.6, 0.2)
-	bird_head.skill_tags = ["swift", "aerial"]
+	bird_head.skill_tags.assign(["swift", "aerial"])
 	heads.append(bird_head)
 
 	var insect_head = BodyPart.new()
 	insect_head.id = "head_insect"
 	insect_head.part_type = BodyPart.PartType.HEAD
 	insect_head.display_name = "Голова насекомого"
-	insect_head.hp = 6
-	insect_head.atk = 4
+	insect_head.hp = 11
+	insect_head.atk = 7
 	insect_head.def = 4
 	insect_head.speed = 8
 	insect_head.crit = 0.08
@@ -77,23 +77,23 @@ func _init_heads():
 	insect_head.size = 0.5
 	insect_head.element_count = 4  # много глаз
 	insect_head.color = Color(0.3, 0.3, 0.1)
-	insect_head.skill_tags = ["swarm", "toxic"]
+	insect_head.skill_tags.assign(["swarm", "toxic"])
 	heads.append(insect_head)
 
 	var dragon_head = BodyPart.new()
 	dragon_head.id = "head_dragon"
 	dragon_head.part_type = BodyPart.PartType.HEAD
 	dragon_head.display_name = "Драконья голова"
-	dragon_head.hp = 20
-	dragon_head.atk = 12
-	dragon_head.def = 6
+	dragon_head.hp = 12
+	dragon_head.atk = 8
+	dragon_head.def = 5
 	dragon_head.speed = 5
 	dragon_head.crit = 0.12
-	dragon_head.attack_range = 3.0  # огненное дыхание
+	dragon_head.attack_range = 2.5  # огненное дыхание
 	dragon_head.size = 1.3
 	dragon_head.mass = 1.4
 	dragon_head.color = Color(0.8, 0.2, 0.1)
-	dragon_head.skill_tags = ["fierce", "fire", "mystic"]
+	dragon_head.skill_tags.assign(["fierce", "fire", "mystic"])
 	heads.append(dragon_head)
 
 func _init_bodies():
@@ -103,13 +103,13 @@ func _init_bodies():
 	mammal_body.id = "body_mammal"
 	mammal_body.part_type = BodyPart.PartType.BODY
 	mammal_body.display_name = "Тело млекопитающего"
-	mammal_body.hp = 25
+	mammal_body.hp = 22
 	mammal_body.atk = 5
 	mammal_body.def = 5
 	mammal_body.speed = 5
 	mammal_body.size = 1.0
 	mammal_body.color = Color(0.6, 0.5, 0.4)
-	mammal_body.skill_tags = ["sturdy", "warm"]
+	mammal_body.skill_tags.assign(["sturdy", "warm"])
 	bodies.append(mammal_body)
 
 	var reptile_body = BodyPart.new()
@@ -122,21 +122,21 @@ func _init_bodies():
 	reptile_body.speed = 3
 	reptile_body.size = 1.1
 	reptile_body.color = Color(0.3, 0.5, 0.3)
-	reptile_body.skill_tags = ["scaled", "cold"]
+	reptile_body.skill_tags.assign(["scaled", "cold"])
 	bodies.append(reptile_body)
 
 	var insect_body = BodyPart.new()
 	insect_body.id = "body_insect"
 	insect_body.part_type = BodyPart.PartType.BODY
 	insect_body.display_name = "Тело насекомого"
-	insect_body.hp = 12
-	insect_body.atk = 3
-	insect_body.def = 6
+	insect_body.hp = 15
+	insect_body.atk = 4
+	insect_body.def = 7
 	insect_body.speed = 7
 	insect_body.size = 0.6
 	insect_body.mass = 0.5
 	insect_body.color = Color(0.2, 0.2, 0.1)
-	insect_body.skill_tags = ["swarm", "chitinous"]
+	insect_body.skill_tags.assign(["swarm", "chitinous"])
 	bodies.append(insect_body)
 
 func _init_legs():
@@ -150,10 +150,10 @@ func _init_legs():
 	paws.atk = 3
 	paws.def = 2
 	paws.speed = 6
-	paws.crit = 0.05
+	paws.crit = 0.08
 	paws.size = 0.8
 	paws.color = Color(0.5, 0.4, 0.3)
-	paws.skill_tags = ["swift", "pack"]
+	paws.skill_tags.assign(["swift", "pack"])
 	legs.append(paws)
 
 	var claws = BodyPart.new()
@@ -161,28 +161,28 @@ func _init_legs():
 	claws.part_type = BodyPart.PartType.LEGS
 	claws.display_name = "Когтистые лапы"
 	claws.hp = 6
-	claws.atk = 6
+	claws.atk = 5
 	claws.def = 1
 	claws.speed = 5
 	claws.crit = 0.1
 	claws.size = 0.9
 	claws.color = Color(0.4, 0.3, 0.2)
-	claws.skill_tags = ["fierce", "rend"]
+	claws.skill_tags.assign(["fierce", "rend"])
 	legs.append(claws)
 
 	var insect_legs = BodyPart.new()
 	insect_legs.id = "legs_insect"
 	insect_legs.part_type = BodyPart.PartType.LEGS
 	insect_legs.display_name = "Лапки насекомого"
-	insect_legs.hp = 4
-	insect_legs.atk = 2
+	insect_legs.hp = 6
+	insect_legs.atk = 3
 	insect_legs.def = 3
 	insect_legs.speed = 9
 	insect_legs.evasion = 0.08
 	insect_legs.size = 0.4
 	insect_legs.mass = 0.3
 	insect_legs.color = Color(0.2, 0.2, 0.1)
-	insect_legs.skill_tags = ["swarm", "agile"]
+	insect_legs.skill_tags.assign(["swarm", "agile"])
 	legs.append(insect_legs)
 
 func _init_tails():
@@ -196,10 +196,10 @@ func _init_tails():
 	fluffy_tail.atk = 2
 	fluffy_tail.def = 2
 	fluffy_tail.speed = 3
-	fluffy_tail.evasion = 0.05
+	fluffy_tail.evasion = 0.1
 	fluffy_tail.size = 0.7
 	fluffy_tail.color = Color(0.6, 0.5, 0.4)
-	fluffy_tail.skill_tags = ["warm", "balance"]
+	fluffy_tail.skill_tags.assign(["warm", "balance"])
 	tails.append(fluffy_tail)
 
 	var scaled_tail = BodyPart.new()
@@ -214,7 +214,7 @@ func _init_tails():
 	scaled_tail.size = 1.0
 	scaled_tail.mass = 1.2
 	scaled_tail.color = Color(0.3, 0.5, 0.3)
-	scaled_tail.skill_tags = ["scaled", "slam"]
+	scaled_tail.skill_tags.assign(["scaled", "slam"])
 	tails.append(scaled_tail)
 
 func _init_wings():
@@ -231,7 +231,7 @@ func _init_wings():
 	feather_wings.evasion = 0.12
 	feather_wings.size = 1.2
 	feather_wings.color = Color(0.7, 0.6, 0.5)
-	feather_wings.skill_tags = ["aerial", "swift"]
+	feather_wings.skill_tags.assign(["aerial", "swift"])
 	wings.append(feather_wings)
 
 	var bat_wings = BodyPart.new()
@@ -245,7 +245,7 @@ func _init_wings():
 	bat_wings.evasion = 0.08
 	bat_wings.size = 1.0
 	bat_wings.color = Color(0.3, 0.2, 0.2)
-	bat_wings.skill_tags = ["aerial", "dark"]
+	bat_wings.skill_tags.assign(["aerial", "dark"])
 	wings.append(bat_wings)
 
 func get_part_by_id(id: String) -> BodyPart:

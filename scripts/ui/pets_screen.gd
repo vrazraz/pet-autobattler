@@ -48,7 +48,7 @@ func _get_pet_button_text(pet: Pet) -> String:
 		Pet.PetState.HEALTHY:
 			status = "[OK]"
 		Pet.PetState.INJURED:
-			status = "[Ранен: %d сек]" % int(pet.injury_time_left)
+			status = "[Ранен: %d сек]" % int(pet.get_injury_time_left())
 		Pet.PetState.DEAD:
 			status = "[МЁРТВ]"
 

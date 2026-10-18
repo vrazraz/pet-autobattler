@@ -16,9 +16,9 @@ func _on_pets_pressed():
 	get_tree().change_scene_to_file("res://scenes/ui/pets_screen.tscn")
 
 func _on_expedition_pressed():
-	# Проверяем, есть ли здоровые питомцы
+	# Проверяем, есть ли здоровые питомцы (в активную вылазку можно вернуться всегда)
 	var healthy = GameManager.get_healthy_pets()
-	if healthy.is_empty():
+	if healthy.is_empty() and GameManager.current_expedition == null:
 		_show_message("Нет здоровых питомцев для вылазки!")
 		return
 

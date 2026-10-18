@@ -24,7 +24,7 @@ enum Rarity { COMMON, UNCOMMON, RARE, EPIC, LEGENDARY }
 
 @export_group("Effects")
 @export var cooldown: float = 0.0  # Для COOLDOWN типа
-@export var damage_multiplier: float = 1.0
+@export var damage_multiplier: float = 0.0  # 0 = навык не наносит урон
 @export var heal_amount: int = 0
 @export var stat_buff: Dictionary = {}  # {"atk": 5, "def": 3}
 @export var stat_debuff: Dictionary = {}  # Дебафф на врага
@@ -38,9 +38,9 @@ static func get_slot_cost(r: Rarity) -> int:
 	match r:
 		Rarity.COMMON: return 1
 		Rarity.UNCOMMON: return 1
-		Rarity.RARE: return 2
+		Rarity.RARE: return 1
 		Rarity.EPIC: return 2
-		Rarity.LEGENDARY: return 3
+		Rarity.LEGENDARY: return 2  # занимает оба слота
 	return 1
 
 func can_learn(pet: Pet) -> bool:
@@ -70,10 +70,10 @@ func get_learn_chance(pet: Pet) -> float:
 	# Базовый шанс зависит от редкости
 	var base_chance = 1.0
 	match rarity:
-		Rarity.COMMON: base_chance = 0.8
-		Rarity.UNCOMMON: base_chance = 0.5
-		Rarity.RARE: base_chance = 0.25
-		Rarity.EPIC: base_chance = 0.1
+		Rarity.COMMON: base_chance = 0.7
+		Rarity.UNCOMMON: base_chance = 0.4
+		Rarity.RARE: base_chance = 0.12
+		Rarity.EPIC: base_chance = 0.06
 		Rarity.LEGENDARY: base_chance = 0.03
 
 	# Бонус от количества совпавших тегов
@@ -99,7 +99,7 @@ func get_rarity_color() -> Color:
 func get_description_formatted() -> String:
 	var desc = description
 
-	if damage_multiplier != 1.0:
+	if damage_multiplier > 0.0:
 		desc += "\nУрон: x%.1f" % damage_multiplier
 
 	if heal_amount > 0:

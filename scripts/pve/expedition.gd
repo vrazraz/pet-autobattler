@@ -10,8 +10,10 @@ var current_node: int = -1
 var player_team: Array[Pet] = []
 
 var expedition_complete: bool = false
+var expedition_success: bool = false
 var captured_pets: Array[Pet] = []
 var earned_currency: int = 0
+var event_log: Array[String] = []  # переживает смену сцен, экран вылазки показывает его
 
 signal node_entered(node_index: int, node_data: Dictionary)
 signal battle_started(enemy_pets: Array[Pet])
@@ -20,6 +22,11 @@ signal expedition_ended(success: bool)
 signal pet_captured(pet: Pet)
 
 const MAP_SIZE = 8  # Количество узлов на карте
+const CAPTURE_CHANCE = 0.5
+const REST_HEAL = 0.5  # привал: доля max HP
+const WILD_POWER_COMMON = 0.75  # обычные дикие питомцы слабее (HP и ATK в бою)
+const WILD_POWER_UNCOMMON = 0.9
+const POST_BATTLE_HEAL = 0.5  # передышка после победы: доля max HP выжившим
 
 func generate_map(difficulty: int = 1):
 	nodes.clear()
@@ -47,7 +54,10 @@ func _generate_node(index: int, difficulty: int) -> Dictionary:
 	# Последний узел - редкий питомец (босс)
 	if index == MAP_SIZE - 1:
 		node["type"] = NodeType.RARE_PET
-		node["enemy_pets"] = _generate_enemies(3, difficulty + 1)
+		# Босс: элитный питомец и свита
+		var boss_team = _generate_enemies(1, difficulty + 1)
+		boss_team.append_array(_generate_enemies(2, difficulty, WILD_POWER_COMMON))
+		node["enemy_pets"] = boss_team
 		node["reward_currency"] = randi_range(30, 50)
 		return node
 
@@ -55,11 +65,11 @@ func _generate_node(index: int, difficulty: int) -> Dictionary:
 	var roll = randf()
 	if roll < 0.4:
 		node["type"] = NodeType.COMMON_PET
-		node["enemy_pets"] = _generate_enemies(randi_range(1, 2), difficulty)
+		node["enemy_pets"] = _generate_enemies(randi_range(1, 2), difficulty, WILD_POWER_COMMON)
 		node["reward_currency"] = randi_range(5, 15)
 	elif roll < 0.7:
 		node["type"] = NodeType.UNCOMMON_PET
-		node["enemy_pets"] = _generate_enemies(randi_range(2, 3), difficulty)
+		node["enemy_pets"] = _generate_enemies(2, difficulty, WILD_POWER_UNCOMMON)
 		node["reward_currency"] = randi_range(15, 25)
 	elif roll < 0.85:
 		node["type"] = NodeType.TREASURE
@@ -69,10 +79,12 @@ func _generate_node(index: int, difficulty: int) -> Dictionary:
 
 	return node
 
-func _generate_enemies(count: int, power_level: int) -> Array[Pet]:
+func _generate_enemies(count: int, power_level: int, wild_power: float = 1.0) -> Array[Pet]:
 	var enemies: Array[Pet] = []
 	for i in range(count):
-		enemies.append(PetDatabase.generate_random_pet(power_level))
+		var pet = PetDatabase.generate_random_pet(power_level)
+		pet.wild_power = wild_power
+		enemies.append(pet)
 	return enemies
 
 func start_expedition(team: Array[Pet]):
@@ -80,6 +92,7 @@ func start_expedition(team: Array[Pet]):
 	expedition_complete = false
 	captured_pets.clear()
 	earned_currency = 0
+	event_log.clear()
 
 	# Входим на первый узел
 	enter_node(0)
@@ -114,15 +127,26 @@ func enter_node(index: int):
 func _collect_treasure(node: Dictionary):
 	earned_currency += node["reward_currency"]
 	GameManager.add_currency(node["reward_currency"])
+	_log("Сокровище: +%d монет" % node["reward_currency"])
 
 func _rest():
 	# Лечим всех питомцев на 30%
 	for pet in player_team:
 		if pet.state == Pet.PetState.HEALTHY:
-			var heal_amount = int(pet.get_max_hp() * 0.3)
+			var heal_amount = int(pet.get_max_hp() * REST_HEAL)
 			pet.current_hp = min(pet.current_hp + heal_amount, pet.get_max_hp())
+	_log("Привал: команда восстановила %d%% HP" % roundi(REST_HEAL * 100))
 
-func on_battle_complete(won: bool, defeated_player_pets: Array[Pet], defeated_enemy_pets: Array[Pet]):
+# Питомцы, способные драться в следующем бою
+func get_fighting_team() -> Array[Pet]:
+	var fighters: Array[Pet] = []
+	for pet in player_team:
+		if pet.can_fight():
+			fighters.append(pet)
+	return fighters
+
+# Ранения/смерть своих питомцев обрабатывает GameManager, здесь только награды и ход вылазки
+func on_battle_complete(won: bool, defeated_enemy_pets: Array[Pet]):
 	var node = nodes[current_node]
 
 	battle_ended.emit(won)
@@ -131,34 +155,34 @@ func on_battle_complete(won: bool, defeated_player_pets: Array[Pet], defeated_en
 		# Награда
 		earned_currency += node["reward_currency"]
 		GameManager.add_currency(node["reward_currency"])
+		_log("Победа на узле %d: +%d монет" % [current_node + 1, node["reward_currency"]])
+
+		# Передышка: выжившие немного восстанавливаются
+		for pet in get_fighting_team():
+			pet.current_hp = mini(pet.current_hp + int(pet.get_max_hp() * POST_BATTLE_HEAL), pet.get_max_hp())
 
 		# Захват одного случайного поверженного врага
-		if not defeated_enemy_pets.is_empty() and randf() < 0.5:
+		if not defeated_enemy_pets.is_empty() and randf() < CAPTURE_CHANCE:
 			var captured = defeated_enemy_pets[randi() % defeated_enemy_pets.size()]
-			captured.state = Pet.PetState.INJURED
-			captured.injury_time_left = randf_range(180, 360)
+			captured.set_injured(randf_range(180, 360))
+			captured.wild_power = 1.0  # у игрока восстанавливает полную силу
 			captured_pets.append(captured)
 			pet_captured.emit(captured)
+			_log("Захвачен: %s" % captured.get_display_name())
 
 		# Проверяем конец вылазки
 		if current_node == MAP_SIZE - 1:
 			_end_expedition(true)
 	else:
-		# Поражение - обрабатываем раненых/мёртвых
-		for pet in defeated_player_pets:
-			pet._on_defeated()
-
-		# Проверяем, есть ли ещё живые
-		var alive = player_team.filter(func(p): return p.can_fight())
-		if alive.is_empty():
-			_end_expedition(false)
+		# Поражение, ничья или сдача - команда отступает с тем, что успела добыть
+		_log("Поражение на узле %d, команда отступает" % [current_node + 1])
+		_end_expedition(false)
 
 func can_continue() -> bool:
 	if expedition_complete:
 		return false
 
-	var alive = player_team.filter(func(p): return p.can_fight())
-	return not alive.is_empty()
+	return not get_fighting_team().is_empty()
 
 func advance():
 	if current_node < MAP_SIZE - 1 and can_continue():
@@ -166,16 +190,29 @@ func advance():
 
 func retreat():
 	# Отступление - заканчиваем вылазку с тем, что есть
+	_log("Отступление")
 	_end_expedition(true)
 
 func _end_expedition(success: bool):
+	if expedition_complete:
+		return
+
 	expedition_complete = true
+	expedition_success = success
+
+	# Выжившие возвращаются домой и отдыхают
+	for pet in player_team:
+		if pet.can_fight():
+			pet.initialize_hp()
 
 	# Добавляем захваченных питомцев
 	for pet in captured_pets:
 		GameManager.add_pet(pet)
 
 	expedition_ended.emit(success)
+
+func _log(text: String):
+	event_log.append(text)
 
 func get_node_description(node_type: NodeType) -> String:
 	match node_type:

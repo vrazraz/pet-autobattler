@@ -7,7 +7,9 @@ extends Control
 @onready var action_button: Button = $VBoxContainer/ActionButton
 @onready var retreat_button: Button = $VBoxContainer/Header/RetreatButton
 
-enum ScreenState { TEAM_SELECT, EXPLORING, IN_BATTLE }
+enum ScreenState { TEAM_SELECT, EXPLORING, IN_BATTLE, ENDED }
+
+const LOG_LINES = 4
 
 var state: ScreenState = ScreenState.TEAM_SELECT
 var expedition: Expedition
@@ -15,6 +17,16 @@ var selected_team: Array[Pet] = []
 var healthy_pets: Array[Pet] = []
 
 func _ready():
+	# Возврат с экрана боя: продолжаем ту же вылазку
+	if GameManager.current_expedition:
+		expedition = GameManager.current_expedition
+		_connect_expedition_signals()
+		pets_list.visible = false
+		state = ScreenState.ENDED if expedition.expedition_complete else ScreenState.EXPLORING
+		_show_log()
+		_update_ui()
+		return
+
 	healthy_pets = GameManager.get_healthy_pets()
 	expedition = Expedition.new()
 
@@ -58,12 +70,21 @@ func _update_ui():
 			action_button.text = "Продолжить"
 			action_button.disabled = not expedition.can_continue()
 			retreat_button.text = "Отступить"
+			retreat_button.disabled = false
 			_update_map_display()
 			_update_team_display()
 
 		ScreenState.IN_BATTLE:
 			action_button.disabled = true
 			retreat_button.disabled = true
+
+		ScreenState.ENDED:
+			action_button.text = "Вернуться"
+			action_button.disabled = false
+			retreat_button.disabled = true
+			_update_map_display()
+			_update_team_display()
+			_show_summary()
 
 func _update_map_display():
 	# Очищаем карту
@@ -100,7 +121,10 @@ func _create_highlight_style() -> StyleBoxFlat:
 func _update_team_display():
 	var info = "Команда:\n"
 	for pet in expedition.player_team:
-		var status = "OK" if pet.can_fight() else "Ранен"
+		var status = "OK"
+		match pet.state:
+			Pet.PetState.INJURED: status = "Ранен"
+			Pet.PetState.DEAD: status = "Погиб"
 		info += "- %s [%s] HP: %d/%d\n" % [
 			pet.get_display_name(),
 			status,
@@ -108,6 +132,18 @@ func _update_team_display():
 			pet.get_max_hp()
 		]
 	team_info.text = info
+
+func _show_log():
+	var lines = expedition.event_log.slice(-LOG_LINES)
+	node_info.text = "\n".join(lines)
+
+func _show_summary():
+	var message = "Вылазка завершена!\n" if expedition.expedition_success else "Вылазка провалена.\n"
+	message += "Заработано: %d монет\n" % expedition.earned_currency
+	message += "Захвачено питомцев: %d" % expedition.captured_pets.size()
+	for pet in expedition.captured_pets:
+		message += "\n- %s" % pet.get_display_name()
+	node_info.text = message
 
 func _on_node_clicked(index: int):
 	if state != ScreenState.EXPLORING:
@@ -127,20 +163,26 @@ func _on_action_pressed():
 		ScreenState.EXPLORING:
 			_advance()
 
+		ScreenState.ENDED:
+			_return_to_menu()
+
+func _connect_expedition_signals():
+	if not expedition.node_entered.is_connected(_on_node_entered):
+		expedition.node_entered.connect(_on_node_entered)
+		expedition.battle_started.connect(_on_battle_started)
+		expedition.expedition_ended.connect(_on_expedition_ended)
+
 func _start_expedition():
 	if selected_team.is_empty():
 		return
 
+	GameManager.current_expedition = expedition
+	_connect_expedition_signals()
+
 	expedition.generate_map(1)
-	expedition.start_expedition(selected_team)
-
-	expedition.node_entered.connect(_on_node_entered)
-	expedition.battle_started.connect(_on_battle_started)
-	expedition.expedition_ended.connect(_on_expedition_ended)
-	expedition.pet_captured.connect(_on_pet_captured)
-
 	state = ScreenState.EXPLORING
 	pets_list.visible = false
+	expedition.start_expedition(selected_team)
 	_update_ui()
 
 func _advance():
@@ -148,8 +190,9 @@ func _advance():
 		expedition.advance()
 
 func _on_node_entered(index: int, node_data: Dictionary):
-	node_info.text = "Узел %d: %s" % [index + 1, expedition.get_node_description(node_data["type"])]
 	_update_ui()
+	_show_log()
+	node_info.text += "\nУзел %d: %s" % [index + 1, expedition.get_node_description(node_data["type"])]
 
 func _on_battle_started(enemy_pets: Array[Pet]):
 	state = ScreenState.IN_BATTLE
@@ -159,9 +202,9 @@ func _on_battle_started(enemy_pets: Array[Pet]):
 	_start_battle(enemy_pets)
 
 func _start_battle(enemy_pets: Array[Pet]):
-	# Сохраняем данные для боя
+	# Сохраняем данные для боя: в бой идут только здоровые
 	var battle_data = {
-		"player_team": expedition.player_team,
+		"player_team": expedition.get_fighting_team(),
 		"enemy_team": enemy_pets,
 		"expedition": expedition
 	}
@@ -169,21 +212,11 @@ func _start_battle(enemy_pets: Array[Pet]):
 	# Храним в синглтоне
 	GameManager.current_battle_data = battle_data
 
-	get_tree().change_scene_to_file("res://scenes/battle/battle_screen.tscn")
+	get_tree().change_scene_to_file.call_deferred("res://scenes/battle/battle_screen.tscn")
 
-func _on_expedition_ended(success: bool):
-	var message = "Вылазка завершена!\n"
-	message += "Заработано: %d монет\n" % expedition.earned_currency
-	message += "Захвачено питомцев: %d" % expedition.captured_pets.size()
-
-	node_info.text = message
-	action_button.text = "Вернуться"
-	action_button.disabled = false
-	action_button.pressed.disconnect(_on_action_pressed)
-	action_button.pressed.connect(_return_to_menu)
-
-func _on_pet_captured(pet: Pet):
-	node_info.text += "\nЗахвачен: %s!" % pet.get_display_name()
+func _on_expedition_ended(_success: bool):
+	state = ScreenState.ENDED
+	_update_ui()
 
 func _on_retreat_pressed():
 	match state:
@@ -194,4 +227,5 @@ func _on_retreat_pressed():
 			expedition.retreat()
 
 func _return_to_menu():
+	GameManager.current_expedition = null
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")

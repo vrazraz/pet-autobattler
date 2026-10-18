@@ -42,6 +42,7 @@ func _ready():
 	battle_manager.battle_ended.connect(_on_battle_ended)
 	battle_manager.pet_attacked.connect(_on_pet_attacked)
 	battle_manager.pet_died.connect(_on_pet_died)
+	battle_manager.skill_used.connect(_on_skill_used)
 
 	# Создаём визуальные представления питомцев
 	_create_pet_visuals()
@@ -170,29 +171,8 @@ func _on_battle_ended(result: BattleManager.BattleResult):
 	surrender_button.pressed.disconnect(_on_surrender_pressed)
 	surrender_button.pressed.connect(_on_continue_pressed)
 
-	# Обрабатываем результат
-	_process_battle_result(result)
-
-func _process_battle_result(result: BattleManager.BattleResult):
-	var defeated_player_pets = battle_manager.get_defeated_pets(0)
-
-	# Обрабатываем через GameManager
-	var captured: Pet = null
-	if result == BattleManager.BattleResult.PLAYER_WIN:
-		var defeated_enemies = battle_manager.get_defeated_pets(1)
-		if not defeated_enemies.is_empty() and randf() < 0.3:
-			captured = defeated_enemies[0]
-
-	GameManager.process_battle_result(result, defeated_player_pets, captured)
-
-	# Если была вылазка - обновляем её
-	if GameManager.current_battle_data.has("expedition"):
-		var expedition: Expedition = GameManager.current_battle_data["expedition"]
-		expedition.on_battle_complete(
-			result == BattleManager.BattleResult.PLAYER_WIN,
-			defeated_player_pets,
-			battle_manager.get_defeated_pets(1)
-		)
+	# HP, ранения, награды и вылазка обрабатываются в одном месте
+	GameManager.finish_battle(battle_manager, GameManager.current_battle_data)
 
 func _on_pet_attacked(attacker: BattlePet, target: BattlePet, damage: int):
 	var attacker_name = attacker.pet_data.get_display_name().substr(0, 8)
@@ -200,7 +180,12 @@ func _on_pet_attacked(attacker: BattlePet, target: BattlePet, damage: int):
 	_add_log("%s -> %s: %d урона" % [attacker_name, target_name, damage])
 
 func _on_pet_died(pet: BattlePet):
-	_add_log("%s погиб!" % pet.pet_data.get_display_name())
+	_add_log("%s повержен!" % pet.pet_data.get_display_name())
+
+func _on_skill_used(pet: BattlePet, skill_id: String):
+	var skill = SkillDatabase.get_skill(skill_id)
+	if skill:
+		_add_log("%s: %s" % [pet.pet_data.get_display_name().substr(0, 8), skill.display_name])
 
 func _add_log(text: String):
 	battle_log.append(text)
@@ -227,7 +212,9 @@ func _on_continue_pressed():
 	Engine.time_scale = 1.0
 
 	# Возвращаемся в вылазку или в меню
-	if GameManager.current_battle_data.has("expedition"):
+	var from_expedition = GameManager.current_battle_data.has("expedition")
+	GameManager.current_battle_data = {}
+	if from_expedition:
 		get_tree().change_scene_to_file("res://scenes/pve/expedition_screen.tscn")
 	else:
 		get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")

@@ -1,0 +1,61 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  godot-headless:
+    name: Godot 4.2.2 headless tests
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    env:
+      GODOT_VERSION: 4.2.2-stable
+      GODOT_DIR: /home/runner/godot-bin
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Godot binary
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.GODOT_DIR }}
+          key: godot-${{ env.GODOT_VERSION }}-linux-x86_64
+
+      - name: Download Godot ${{ env.GODOT_VERSION }}
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p "$GODOT_DIR"
+          url="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          curl -fsSL --retry 3 -o /tmp/godot.zip "$url"
+          unzip -q /tmp/godot.zip -d /tmp/godot
+          mv "/tmp/godot/Godot_v${GODOT_VERSION}_linux.x86_64" "$GODOT_DIR/godot"
+          chmod +x "$GODOT_DIR/godot"
+
+      - name: Godot version
+        run: '"$GODOT_DIR/godot" --headless --version'
+
+      # На первом запуске Godot строит кэш глобальных классов (.godot/);
+      # без него скрипты падают с "Could not find type". Второй проход —
+      # уже по готовому кэшу.
+      - name: Import project
+        run: |
+          "$GODOT_DIR/godot" --headless --path . --editor --quit || true
+          "$GODOT_DIR/godot" --headless --path . --editor --quit
+
+      - name: Run tests
+        run: |
+          set -uo pipefail
+          "$GODOT_DIR/godot" --headless --path . res://tests/test_battle.tscn 2>&1 | tee test_output.log
+          code=${PIPESTATUS[0]}
+          if grep -q "SCRIPT ERROR" test_output.log; then
+            echo "::error::Godot reported SCRIPT ERROR during tests"
+            grep -n -A3 "SCRIPT ERROR" test_output.log || true
+            exit 1
+          fi
+          if ! grep -qE "^RESULT: [0-9]+ passed, 0 failed" test_output.log; then
+            echo "::error::Test summary line missing or there are failures"
+            exit 1
+          fi
+          exit "$code"

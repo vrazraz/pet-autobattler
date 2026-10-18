@@ -13,6 +13,17 @@ const POSITIVE_MUTATION_WEIGHT = 0.3
 # Шанс мутации параметра
 const STAT_MUTATION_RANGE = 0.2  # ±20% от базового значения
 
+const SKILL_SLOTS = 2
+const OFFERS_PER_SLOT = 2
+
+# Сколько частей может быть в слоте (min, max)
+const SLOT_LIMITS = {
+	BodyPart.PartType.HEAD: Vector2i(1, 3),
+	BodyPart.PartType.LEGS: Vector2i(1, 4),
+	BodyPart.PartType.TAIL: Vector2i(0, 2),
+	BodyPart.PartType.WINGS: Vector2i(0, 2),
+}
+
 signal breeding_complete(offspring: Pet)
 signal mutation_occurred(part_type: String, mutation_type: String)
 
@@ -58,7 +69,10 @@ static func _inherit_parts_array(parts_a: Array[BodyPart], parts_b: Array[BodyPa
 		if randf() < NEGATIVE_MUTATION_WEIGHT:
 			target_count = max(0, target_count - 1)  # Потеря части
 		else:
-			target_count = min(4, target_count + 1)  # Дополнительная часть
+			target_count = target_count + 1  # Дополнительная часть
+
+	var limits: Vector2i = SLOT_LIMITS.get(part_type, Vector2i(0, 4))
+	target_count = clampi(target_count, limits.x, limits.y)
 
 	# Наследуем каждую часть
 	for i in range(target_count):
@@ -199,30 +213,27 @@ static func _get_random_part(parts_a: Array[BodyPart], parts_b: Array[BodyPart])
 
 	return all_parts[randi() % all_parts.size()].duplicate_part()
 
+# Каждый слот предлагает 2 случайных навыка из доступных по частям тела.
+# Они пробуются в случайном порядке, достаётся первый, прошедший шанс изучения.
+# Если не прошёл ни один, слот пустеет: даже идеальные родители ничего не гарантируют.
 static func _generate_skills(pet: Pet) -> Array[String]:
 	var skills: Array[String] = []
-	var skill_slots = 2  # Базовое количество слотов
+	var pool = SkillDatabase.get_learnable_skills(pet)
+	var free_slots = SKILL_SLOTS
 
-	# Получаем все доступные навыки из базы
-	var available_skills = SkillDatabase.get_learnable_skills(pet)
-
-	# Сортируем по редкости (обычные первыми)
-	available_skills.sort_custom(func(a, b): return a.rarity < b.rarity)
-
-	var used_slots = 0
-	for skill in available_skills:
-		if used_slots >= skill_slots:
+	while free_slots > 0:
+		var fitting = pool.filter(func(s): return not skills.has(s.id) and Skill.get_slot_cost(s.rarity) <= free_slots)
+		if fitting.is_empty():
 			break
 
-		var slot_cost = Skill.get_slot_cost(skill.rarity)
-		if used_slots + slot_cost > skill_slots:
-			continue
+		fitting.shuffle()
+		free_slots -= 1  # слот тратится и при неудаче
 
-		# Проверяем шанс изучения
-		var learn_chance = skill.get_learn_chance(pet)
-		if randf() < learn_chance:
-			skills.append(skill.id)
-			used_slots += slot_cost
+		for skill in fitting.slice(0, OFFERS_PER_SLOT):
+			if randf() < skill.get_learn_chance(pet):
+				skills.append(skill.id)
+				free_slots -= Skill.get_slot_cost(skill.rarity) - 1
+				break
 
 	return skills
 
@@ -234,9 +245,3 @@ static func create_egg(parent_a: Pet, parent_b: Pet) -> Dictionary:
 		"hatch_time": Time.get_unix_time_from_system() + randf_range(300, 600),  # 5-10 минут
 		"created_at": Time.get_unix_time_from_system()
 	}
-
-static func hatch_egg(egg_data: Dictionary, parent_a: Pet, parent_b: Pet) -> Pet:
-	if Time.get_unix_time_from_system() < egg_data["hatch_time"]:
-		return null  # Ещё не время
-
-	return breed(parent_a, parent_b)

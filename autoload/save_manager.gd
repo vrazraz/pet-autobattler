@@ -3,17 +3,21 @@ extends Node
 ## Менеджер сохранений
 
 const SAVE_PATH = "user://savegame.json"
+const SAVE_VERSION = 2  # 2: новый баланс, шкала HP изменилась
+
+# Можно переопределить (например, в тестах), чтобы не трогать сейв игрока
+var save_path: String = SAVE_PATH
 
 func save_game() -> bool:
 	var save_data = {
-		"version": 1,
+		"version": SAVE_VERSION,
 		"timestamp": Time.get_unix_time_from_system(),
 		"currency": GameManager.currency,
 		"pets": _serialize_pets(GameManager.player_pets),
 		"eggs": GameManager.eggs.duplicate()
 	}
 
-	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var file = FileAccess.open(save_path, FileAccess.WRITE)
 	if file == null:
 		push_error("Failed to open save file for writing")
 		return false
@@ -24,10 +28,10 @@ func save_game() -> bool:
 	return true
 
 func load_game() -> bool:
-	if not FileAccess.file_exists(SAVE_PATH):
+	if not FileAccess.file_exists(save_path):
 		return false
 
-	var file = FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var file = FileAccess.open(save_path, FileAccess.READ)
 	if file == null:
 		push_error("Failed to open save file for reading")
 		return false
@@ -47,25 +51,31 @@ func load_game() -> bool:
 
 	# Восстанавливаем данные
 	GameManager.currency = save_data.get("currency", 100)
-	GameManager.eggs = save_data.get("eggs", [])
+	GameManager.eggs.assign(save_data.get("eggs", []))
 	GameManager.player_pets = _deserialize_pets(save_data.get("pets", []))
+
+	# В старых сейвах HP записано в старой шкале - здоровые питомцы получают полное HP по новой
+	if int(save_data.get("version", 1)) < 2:
+		for pet in GameManager.player_pets:
+			if pet.state == Pet.PetState.HEALTHY:
+				pet.initialize_hp()
 
 	return true
 
 func _serialize_pets(pets: Array[Pet]) -> Array:
 	var result = []
 	for pet in pets:
-		result.append(_serialize_pet(pet))
+		result.append(serialize_pet(pet))
 	return result
 
-func _serialize_pet(pet: Pet) -> Dictionary:
+func serialize_pet(pet: Pet) -> Dictionary:
 	return {
 		"id": pet.id,
 		"nickname": pet.nickname,
 		"generation": pet.generation,
 		"state": pet.state,
 		"current_hp": pet.current_hp,
-		"injury_time_left": pet.injury_time_left,
+		"injury_until": pet.injury_until,
 		"skills": pet.skills,
 		"parent_a_id": pet.parent_a_id,
 		"parent_b_id": pet.parent_b_id,
@@ -107,19 +117,23 @@ func _serialize_part(part: BodyPart) -> Dictionary:
 func _deserialize_pets(data: Array) -> Array[Pet]:
 	var result: Array[Pet] = []
 	for pet_data in data:
-		var pet = _deserialize_pet(pet_data)
+		var pet = deserialize_pet(pet_data)
 		if pet:
 			result.append(pet)
 	return result
 
-func _deserialize_pet(data: Dictionary) -> Pet:
+func deserialize_pet(data: Dictionary) -> Pet:
 	var pet = Pet.new()
 	pet.id = data.get("id", pet.id)
 	pet.nickname = data.get("nickname", "")
 	pet.generation = data.get("generation", 1)
 	pet.state = data.get("state", Pet.PetState.HEALTHY)
 	pet.current_hp = data.get("current_hp", 0)
-	pet.injury_time_left = data.get("injury_time_left", 0.0)
+	if data.has("injury_until"):
+		pet.injury_until = data["injury_until"]
+	else:
+		# Старый формат: оставшиеся секунды вместо отметки времени
+		pet.injury_until = Time.get_unix_time_from_system() + maxf(0.0, data.get("injury_time_left", 0.0))
 	pet.skills = Array(data.get("skills", []), TYPE_STRING, "", null)
 	pet.parent_a_id = data.get("parent_a_id", "")
 	pet.parent_b_id = data.get("parent_b_id", "")
@@ -147,6 +161,14 @@ func _deserialize_pet(data: Dictionary) -> Pet:
 		var wing = _deserialize_part(wing_data)
 		if wing:
 			pet.wings.append(wing)
+
+	# Питомцы, созданные старым багом старта (без обязательных частей)
+	if pet.heads.is_empty():
+		pet.heads.append(PetDatabase.get_random_part(BodyPart.PartType.HEAD))
+	if pet.body == null:
+		pet.body = PetDatabase.get_random_part(BodyPart.PartType.BODY)
+	if pet.legs.is_empty():
+		pet.legs.append(PetDatabase.get_random_part(BodyPart.PartType.LEGS))
 
 	if pet.current_hp <= 0:
 		pet.initialize_hp()
@@ -179,8 +201,8 @@ func _deserialize_part(data: Dictionary) -> BodyPart:
 	return part
 
 func delete_save():
-	if FileAccess.file_exists(SAVE_PATH):
-		DirAccess.remove_absolute(SAVE_PATH)
+	if FileAccess.file_exists(save_path):
+		DirAccess.remove_absolute(save_path)
 
 func has_save() -> bool:
-	return FileAccess.file_exists(SAVE_PATH)
+	return FileAccess.file_exists(save_path)

@@ -18,7 +18,7 @@ func _init_passive_skills():
 	thick_hide.description = "Повышает защиту."
 	thick_hide.skill_type = Skill.SkillType.PASSIVE
 	thick_hide.rarity = Skill.Rarity.COMMON
-	thick_hide.required_tags = ["sturdy"]
+	thick_hide.required_tags.assign(["sturdy"])
 	thick_hide.stat_buff = {"def": 3}
 	skills.append(thick_hide)
 
@@ -28,7 +28,7 @@ func _init_passive_skills():
 	sharp_claws.description = "Повышает атаку."
 	sharp_claws.skill_type = Skill.SkillType.PASSIVE
 	sharp_claws.rarity = Skill.Rarity.COMMON
-	sharp_claws.required_tags = ["fierce"]
+	sharp_claws.required_tags.assign(["fierce"])
 	sharp_claws.stat_buff = {"atk": 3}
 	skills.append(sharp_claws)
 
@@ -38,7 +38,7 @@ func _init_passive_skills():
 	quick_feet.description = "Повышает скорость."
 	quick_feet.skill_type = Skill.SkillType.PASSIVE
 	quick_feet.rarity = Skill.Rarity.COMMON
-	quick_feet.required_tags = ["swift"]
+	quick_feet.required_tags.assign(["swift"])
 	quick_feet.stat_buff = {"speed": 3}
 	skills.append(quick_feet)
 
@@ -48,7 +48,7 @@ func _init_passive_skills():
 	eagle_eye.description = "Повышает шанс крита."
 	eagle_eye.skill_type = Skill.SkillType.PASSIVE
 	eagle_eye.rarity = Skill.Rarity.UNCOMMON
-	eagle_eye.required_tags = ["aerial"]
+	eagle_eye.required_tags.assign(["aerial"])
 	eagle_eye.stat_buff = {"crit": 0.08}
 	skills.append(eagle_eye)
 
@@ -58,7 +58,7 @@ func _init_passive_skills():
 	evasive.description = "Повышает уклонение."
 	evasive.skill_type = Skill.SkillType.PASSIVE
 	evasive.rarity = Skill.Rarity.UNCOMMON
-	evasive.required_tags = ["agile", "swift"]
+	evasive.required_tags.assign(["agile", "swift"])
 	evasive.required_tag_count = 1
 	evasive.stat_buff = {"evasion": 0.08}
 	skills.append(evasive)
@@ -69,7 +69,7 @@ func _init_passive_skills():
 	pack_hunter.description = "Бонус к атаке и скорости."
 	pack_hunter.skill_type = Skill.SkillType.PASSIVE
 	pack_hunter.rarity = Skill.Rarity.RARE
-	pack_hunter.required_tags = ["pack"]
+	pack_hunter.required_tags.assign(["pack"])
 	pack_hunter.required_tag_count = 1
 	pack_hunter.stat_buff = {"atk": 2, "speed": 2}
 	skills.append(pack_hunter)
@@ -80,7 +80,7 @@ func _init_passive_skills():
 	dragon_scales.description = "Значительно повышает защиту и HP."
 	dragon_scales.skill_type = Skill.SkillType.PASSIVE
 	dragon_scales.rarity = Skill.Rarity.EPIC
-	dragon_scales.required_tags = ["scaled", "fire"]
+	dragon_scales.required_tags.assign(["scaled", "fire"])
 	dragon_scales.required_tag_count = 2
 	dragon_scales.stat_buff = {"def": 5, "hp": 10}
 	skills.append(dragon_scales)
@@ -95,7 +95,7 @@ func _init_trigger_skills():
 	counter_attack.skill_type = Skill.SkillType.TRIGGER
 	counter_attack.trigger_type = Skill.TriggerType.ON_TAKE_DAMAGE
 	counter_attack.rarity = Skill.Rarity.COMMON
-	counter_attack.required_tags = ["fierce"]
+	counter_attack.required_tags.assign(["fierce"])
 	counter_attack.damage_multiplier = 0.5
 	counter_attack.effect_chance = 0.3
 	skills.append(counter_attack)
@@ -107,8 +107,8 @@ func _init_trigger_skills():
 	life_steal.skill_type = Skill.SkillType.TRIGGER
 	life_steal.trigger_type = Skill.TriggerType.ON_HIT
 	life_steal.rarity = Skill.Rarity.UNCOMMON
-	life_steal.required_tags = ["dark"]
-	life_steal.heal_amount = 3
+	life_steal.required_tags.assign(["dark"])
+	life_steal.heal_amount = 8
 	life_steal.effect_chance = 0.4
 	skills.append(life_steal)
 
@@ -119,7 +119,7 @@ func _init_trigger_skills():
 	battle_cry.skill_type = Skill.SkillType.TRIGGER
 	battle_cry.trigger_type = Skill.TriggerType.ON_BATTLE_START
 	battle_cry.rarity = Skill.Rarity.COMMON
-	battle_cry.required_tags = ["pack", "fierce"]
+	battle_cry.required_tags.assign(["pack", "fierce"])
 	battle_cry.required_tag_count = 1
 	battle_cry.stat_buff = {"atk": 5}
 	battle_cry.effect_chance = 1.0
@@ -132,7 +132,7 @@ func _init_trigger_skills():
 	death_spite.skill_type = Skill.SkillType.TRIGGER
 	death_spite.trigger_type = Skill.TriggerType.ON_DEATH
 	death_spite.rarity = Skill.Rarity.UNCOMMON
-	death_spite.required_tags = ["toxic"]
+	death_spite.required_tags.assign(["toxic"])
 	death_spite.damage_multiplier = 1.5
 	death_spite.effect_chance = 0.8
 	skills.append(death_spite)
@@ -144,7 +144,7 @@ func _init_trigger_skills():
 	bloodlust.skill_type = Skill.SkillType.TRIGGER
 	bloodlust.trigger_type = Skill.TriggerType.ON_KILL
 	bloodlust.rarity = Skill.Rarity.RARE
-	bloodlust.required_tags = ["fierce"]
+	bloodlust.required_tags.assign(["fierce"])
 	bloodlust.stat_buff = {"atk": 3, "speed": 2}
 	bloodlust.effect_chance = 1.0
 	skills.append(bloodlust)
@@ -156,7 +156,7 @@ func _init_trigger_skills():
 	last_stand.skill_type = Skill.SkillType.TRIGGER
 	last_stand.trigger_type = Skill.TriggerType.ON_LOW_HP
 	last_stand.rarity = Skill.Rarity.RARE
-	last_stand.required_tags = ["sturdy"]
+	last_stand.required_tags.assign(["sturdy"])
 	last_stand.stat_buff = {"atk": 5, "def": 3}
 	last_stand.effect_chance = 1.0
 	skills.append(last_stand)
@@ -170,9 +170,9 @@ func _init_cooldown_skills():
 	regeneration.description = "Периодически восстанавливает HP."
 	regeneration.skill_type = Skill.SkillType.COOLDOWN
 	regeneration.rarity = Skill.Rarity.UNCOMMON
-	regeneration.required_tags = ["regenerate"]
+	regeneration.required_tags.assign(["regenerate"])
 	regeneration.cooldown = 5.0
-	regeneration.heal_amount = 5
+	regeneration.heal_amount = 15
 	regeneration.effect_chance = 1.0
 	skills.append(regeneration)
 
@@ -182,7 +182,7 @@ func _init_cooldown_skills():
 	fire_breath.description = "Мощная огненная атака."
 	fire_breath.skill_type = Skill.SkillType.COOLDOWN
 	fire_breath.rarity = Skill.Rarity.RARE
-	fire_breath.required_tags = ["fire"]
+	fire_breath.required_tags.assign(["fire"])
 	fire_breath.cooldown = 8.0
 	fire_breath.damage_multiplier = 2.0
 	fire_breath.effect_chance = 1.0
@@ -195,7 +195,7 @@ func _init_cooldown_skills():
 	poison_spit.description = "Отравляет врага, снижая его статы."
 	poison_spit.skill_type = Skill.SkillType.COOLDOWN
 	poison_spit.rarity = Skill.Rarity.UNCOMMON
-	poison_spit.required_tags = ["toxic"]
+	poison_spit.required_tags.assign(["toxic"])
 	poison_spit.cooldown = 6.0
 	poison_spit.stat_debuff = {"atk": 3, "speed": 2}
 	poison_spit.effect_chance = 0.8
@@ -208,7 +208,7 @@ func _init_cooldown_skills():
 	swarm_call.description = "Призывает рой, повышая уклонение."
 	swarm_call.skill_type = Skill.SkillType.COOLDOWN
 	swarm_call.rarity = Skill.Rarity.RARE
-	swarm_call.required_tags = ["swarm"]
+	swarm_call.required_tags.assign(["swarm"])
 	swarm_call.cooldown = 10.0
 	swarm_call.stat_buff = {"evasion": 0.15, "speed": 3}
 	swarm_call.effect_chance = 1.0
@@ -220,7 +220,7 @@ func _init_cooldown_skills():
 	aerial_dive.description = "Мощная атака с воздуха."
 	aerial_dive.skill_type = Skill.SkillType.COOLDOWN
 	aerial_dive.rarity = Skill.Rarity.RARE
-	aerial_dive.required_tags = ["aerial"]
+	aerial_dive.required_tags.assign(["aerial"])
 	aerial_dive.cooldown = 7.0
 	aerial_dive.damage_multiplier = 1.8
 	aerial_dive.effect_chance = 1.0
@@ -232,7 +232,7 @@ func _init_cooldown_skills():
 	mystic_shield.description = "Временно повышает защиту."
 	mystic_shield.skill_type = Skill.SkillType.COOLDOWN
 	mystic_shield.rarity = Skill.Rarity.EPIC
-	mystic_shield.required_tags = ["mystic"]
+	mystic_shield.required_tags.assign(["mystic"])
 	mystic_shield.cooldown = 12.0
 	mystic_shield.stat_buff = {"def": 8}
 	mystic_shield.effect_chance = 1.0
@@ -244,12 +244,12 @@ func _init_cooldown_skills():
 	phoenix_rebirth.id = "cooldown_rebirth"
 	phoenix_rebirth.display_name = "Возрождение Феникса"
 	phoenix_rebirth.description = "Полностью восстанавливает HP (один раз за бой)."
-	phoenix_rebirth.skill_type = Skill.SkillType.COOLDOWN
+	phoenix_rebirth.skill_type = Skill.SkillType.TRIGGER
+	phoenix_rebirth.trigger_type = Skill.TriggerType.ON_LOW_HP  # срабатывает один раз за бой
 	phoenix_rebirth.rarity = Skill.Rarity.LEGENDARY
-	phoenix_rebirth.required_tags = ["fire", "mystic"]
+	phoenix_rebirth.required_tags.assign(["fire", "mystic"])
 	phoenix_rebirth.required_tag_count = 2
-	phoenix_rebirth.cooldown = 999.0  # Один раз за бой
-	phoenix_rebirth.heal_amount = 100
+	phoenix_rebirth.heal_amount = 999  # лечение ограничено максимумом HP
 	phoenix_rebirth.effect_chance = 1.0
 	phoenix_rebirth.effect_color = Color.GOLD
 	skills.append(phoenix_rebirth)

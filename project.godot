@@ -12,10 +12,10 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-GameManager="*res://autoload/game_manager.gd"
 PetDatabase="*res://autoload/pet_database.gd"
 SkillDatabase="*res://autoload/skill_database.gd"
 SaveManager="*res://autoload/save_manager.gd"
+GameManager="*res://autoload/game_manager.gd"
 
 [display]
 
